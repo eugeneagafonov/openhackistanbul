@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: team2-minecraft-back
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: team2-minecraft-back
+  template:
+    metadata:
+      labels:
+        app: team2-minecraft-back
+    spec:
+      containers:
+      - name: team2-minecraft-back
+        image: openhack/minecraft-server:1.0
+        env:
+        - name: EULA
+          value: "TRUE"
+        ports:
+        - name: minecraft-main 
+          containerPort: 25565
+        - name: minecraft-rcon
+          containerPort: 25575
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: team2-minecraft-back-lb
+spec:
+  type: LoadBalancer
+  loadBalancerIP: 40.117.226.91
+  selector:
+    app: team2-minecraft-back-lb
+  ports:
+  - name: minecraft-main-lb
+    port: 25565
+  - name: minecraft-rcon-lb
+    port: 25575
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: team2-minecraft-back
+# spec:
+#   type: LoadBalancer
+#   loadBalancerIP: 40.117.226.91
+#   selector:
+#     app: team2-minecraft-back
+#   ports:
+#   - name: minecraft-main-lb
+#     protocol: TCP
+#     port: 25565
+#     targetPort: 25565
+#   - name: minecraft-rcon-lb
+#     protocol: TCP
+#     port: 25575
+#     targetPort: 25575
+
