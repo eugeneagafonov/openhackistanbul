@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: azure-vote-front
+spec:
+ replicas: 1
+ selector:
+   matchLabels:
+     app: azure-vote-front
+ template:
+   metadata:
+     labels:
+       app: azure-vote-front
+   spec:
+     containers:
+     - name: azure-vote-front
+       image: openhack/minecraft-server:1.0
+       ports:
+       - name: minecraftport 
+         containerPort: 25565
+       - name: minecraftrcon 
+         containerPort: 25575
+       env:
+       - name: EULA
+         value: "TRUE"
+---
+apiVersion: v1
+kind: Service
+metadata:
+ name: azure-vote-front
+spec:
+ type: LoadBalancer
+ loadBalancerIP: 40.121.20.56
+ ports:
+ - name: minecraftport 
+   port: 25565
+ - name: minecraftrcon
+   port: 25575
+ selector:
+   app: azure-vote-front
