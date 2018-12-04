@@ -30,13 +30,13 @@ metadata:
   name: team2-minecraft-back-lb
 spec:
   type: LoadBalancer
-  loadBalancerIP: 40.117.226.91
+  loadBalancerIP: 40.121.20.56
   selector:
     app: team2-minecraft-back-lb
   ports:
-  - name: minecraft-main-lb
+  - name: minecraft-main
     port: 25565
-  - name: minecraft-rcon-lb
+  - name: minecraft-rcon
     port: 25575
 # apiVersion: v1
 # kind: Service
@@ -56,4 +56,14 @@ spec:
 #     protocol: TCP
 #     port: 25575
 #     targetPort: 25575
-
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: azure-load-balancer
+# spec:
+#   loadBalancerIP: 40.121.20.56
+#   type: LoadBalancer
+#   ports:
+#   - port: 25565
+#   selector:
+#     app: azure-load-balancer
