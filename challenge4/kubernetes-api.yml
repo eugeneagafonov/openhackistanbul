@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: k8s-api
+spec:
+ selector:
+   matchLabels:
+     app: k8s-api
+ template:
+   metadata:
+     labels:
+       app: k8s-api
+   spec:
+     containers:
+     - name: k8s-api
+       image: ohteam2.azurecr.io/team2/k8s-api:1.0
+       ports:
+       - name: apihttp 
+         containerPort: 80
+       env:
+       - name: EULA
+         value: "TRUE"
+---
+apiVersion: v1
+kind: Service
+metadata:
+ name: k8s-api
+spec:
+ type: LoadBalancer
+ ports:
+ - name: apihttp 
+   port: 80
+ selector:
+   app: k8s-api
+---
+# apiVersion: rbac.authorization.k8s.io/v1beta1
+# kind: ClusterRoleBinding
+# metadata:
+#   name: k8s-api-rbac
+# subjects:
+#   - kind: ServiceAccount
+#     # Reference to upper's `metadata.name`
+#     name: default
+#     # Reference to upper's `metadata.namespace`
+#     namespace: default
+# roleRef:
+#   kind: ClusterRole
+#   name: cluster-admin
+#   apiGroup: rbac.authorization.k8s.io
