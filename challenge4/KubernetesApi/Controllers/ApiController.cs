@@ -6,6 +6,7 @@ using k8s;
 using k8s.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using KubernetesApi.Service;
 
 namespace KubernetesApi.Controllers
 {
@@ -20,26 +21,8 @@ namespace KubernetesApi.Controllers
 
         public async Task<IActionResult> Get()
         {
-            var result = new List<EndpointInfo>();
-            var ports = await GetPortsAsync(_client);
-
-            foreach(var p in ports)
-            {
-                var ep = new EndpointInfo();
-                ep.name = p.ServiceName;
-
-                var minecraftPort = p?.Ports?.Where(x => x.Name == "minecraftport")?.SingleOrDefault();
-                var minecraftRconPort = p?.Ports?.Where(x => x.Name == "minecraftrcon")?.SingleOrDefault();
-
-                ep.endpoints = new MinecraftEndpointInfo
-                {
-                    minecraft = $"{p.IP}:{minecraftPort.Port}",
-                    rcon = $"{p.IP}:{minecraftRconPort.Port}"
-                };
-
-                result.Add(ep);
-            }
-
+            KubernetesService ks = new KubernetesService(_client);
+            var result = ks.getContainerEndpoints();
             return Ok(result);
         }
 
@@ -122,49 +105,6 @@ namespace KubernetesApi.Controllers
             }
         }
 
-        private static async Task<List<PortInfo>> GetPortsAsync(IKubernetes client)
-        {
-            var services = await client.ListNamespacedServiceAsync("default");
-            var result = new List<PortInfo>();
-            foreach (var item in services.Items)
-            {
-                if (item.Metadata.Name.StartsWith("azure-vote-front"))
-                {
-                    var pi = new PortInfo();
-                    pi.ServiceName = item.Metadata.Name;
-                    pi.IP = item.Spec.LoadBalancerIP;
-                    pi.Ports = new List<V1ServicePort>();
-                    foreach (var port in item.Spec.Ports)
-                    {
-                        pi.Ports.Add(port);
-                    }
-                    result.Add(pi);
-                }
-            }
-            return result;
-        }
-    }
-
-    public class EndpointInfo
-    {
-        public string name { get; set; }
-
-        public MinecraftEndpointInfo endpoints { get; set; }
-    }
-
-    public class MinecraftEndpointInfo
-    {
-        public string minecraft { get; set; }
-
-        public string rcon { get; set; }
-    }
-
-    public class PortInfo
-    {
-        public string IP { get; set; }
-
-        public string ServiceName { get; set; }
-
-        public List<V1ServicePort> Ports { get; set; }
+        
     }
 }
