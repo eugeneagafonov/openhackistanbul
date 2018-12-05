@@ -1,0 +1,13 @@
+﻿@{
+    ViewData["Title"] = "Admin Page";
+}
+@using  KubernetesApi.Controllers;
+@model List<EndpointInfo>
+
+<h2>Admin UI</h2>
+<ul>
+@foreach(var ei in Model)
+{
+    <li>@ei.name</li>
+}
+</ul>

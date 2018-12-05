@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using k8s;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -30,6 +31,16 @@ namespace KubernetesApi
                 options.MinimumSameSitePolicy = SameSiteMode.None;
             });
 
+            try
+            {
+                var config = KubernetesClientConfiguration.InClusterConfig();
+                // IKubernetes client = new Kubernetes(config);
+
+                services.AddTransient<IKubernetes>(s => new Kubernetes(config));
+            }
+            catch(Exception e)
+            {
+            }
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
         }

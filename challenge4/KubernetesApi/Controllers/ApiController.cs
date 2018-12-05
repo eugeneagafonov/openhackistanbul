@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using k8s;
+using k8s.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,18 +12,44 @@ namespace KubernetesApi.Controllers
     [Route("/api")]
     public class ApiController : Controller
     {
-        public IActionResult Get()
+        private IKubernetes _client;
+        public ApiController(IKubernetes client)
         {
-            string[] result = new string[] { "one", "two", "three" };
+            _client = client ?? throw new ArgumentNullException(nameof(client));
+        }
 
+        public async Task<IActionResult> Get()
+        {
+            var result = new List<EndpointInfo>();
+            var ports = await GetPortsAsync(_client);
+
+            foreach(var p in ports)
+            {
+                var ep = new EndpointInfo();
+                ep.name = p.ServiceName;
+
+                var minecraftPort = p?.Ports?.Where(x => x.Name == "minecraftport")?.SingleOrDefault();
+                var minecraftRconPort = p?.Ports?.Where(x => x.Name == "minecraftrcon")?.SingleOrDefault();
+
+                ep.endpoints = new MinecraftEndpointInfo
+                {
+                    minecraft = $"{p.IP}:{minecraftPort.Port}",
+                    rcon = $"{p.IP}:{minecraftRconPort.Port}"
+                };
+
+                result.Add(ep);
+            }
+
+            return Ok(result);
+        }
+
+        private void DebugOutput()
+        {
             try
             {
-                var config = KubernetesClientConfiguration.InClusterConfig();
-                IKubernetes client = new Kubernetes(config);
-
                 Console.WriteLine("Starting Request!");
 
-                var list = client.ListNamespacedPod("default");
+                var list = _client.ListNamespacedPod("default");
                 foreach (var item in list.Items)
                 {
                     Console.WriteLine(item.Metadata.Name);
@@ -32,7 +59,7 @@ namespace KubernetesApi.Controllers
                         Console.WriteLine($"Pod's hostname is {item.Spec.Hostname}");
                         //Console.WriteLine($"pod IP address: {item.Spec.HostAliases.Select(a => a.Ip).Aggregate((a, b) => $"{a};{b}").Trim(';')}");
                         string nodeName = item.Spec.NodeName;
-                        var node = client.ListNode().Items.SingleOrDefault(n => n.Metadata.Name == nodeName);
+                        var node = _client.ListNode().Items.SingleOrDefault(n => n.Metadata.Name == nodeName);
                         if (null != node)
                         {
                             Console.WriteLine($"Pod's node name is {node.Metadata.Name}");
@@ -58,7 +85,7 @@ namespace KubernetesApi.Controllers
                     Console.WriteLine("Empty!");
                 }
 
-                var services = client.ListNamespacedService("default");
+                var services = _client.ListNamespacedService("default");
                 foreach (var item in services.Items)
                 {
                     Console.WriteLine(item.Metadata.Name);
@@ -74,7 +101,7 @@ namespace KubernetesApi.Controllers
                 }
 
                 Console.WriteLine("ListNamespacedDeployment!");
-                foreach (var item in client.ListNamespacedDeployment("default").Items)
+                foreach (var item in _client.ListNamespacedDeployment("default").Items)
                 {
                     Console.WriteLine($"Name {item.Metadata.Name}");
                     foreach (var label in item.Spec.Template.Metadata.Labels)
@@ -93,8 +120,51 @@ namespace KubernetesApi.Controllers
                 var content = httpOperationException.Response.Content;
                 Console.WriteLine(content);
             }
-
-            return Ok(result);
         }
+
+        private static async Task<List<PortInfo>> GetPortsAsync(IKubernetes client)
+        {
+            var services = await client.ListNamespacedServiceAsync("default");
+            var result = new List<PortInfo>();
+            foreach (var item in services.Items)
+            {
+                if (item.Metadata.Name.StartsWith("azure-vote-front"))
+                {
+                    var pi = new PortInfo();
+                    pi.ServiceName = item.Metadata.Name;
+                    pi.IP = item.Spec.LoadBalancerIP;
+                    pi.Ports = new List<V1ServicePort>();
+                    foreach (var port in item.Spec.Ports)
+                    {
+                        pi.Ports.Add(port);
+                    }
+                    result.Add(pi);
+                }
+            }
+            return result;
+        }
+    }
+
+    public class EndpointInfo
+    {
+        public string name { get; set; }
+
+        public MinecraftEndpointInfo endpoints { get; set; }
+    }
+
+    public class MinecraftEndpointInfo
+    {
+        public string minecraft { get; set; }
+
+        public string rcon { get; set; }
+    }
+
+    public class PortInfo
+    {
+        public string IP { get; set; }
+
+        public string ServiceName { get; set; }
+
+        public List<V1ServicePort> Ports { get; set; }
     }
 }
