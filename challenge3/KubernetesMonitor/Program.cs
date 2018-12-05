@@ -22,9 +22,9 @@ namespace KubernetesMonitor
             {
                 try
                 {
-                    var ports = await GetPortsAsync(client);
-                    var minecraftPort = ports?.Where(p => p.Name == "minecraftport")?.SingleOrDefault();
-                    var minecraftRconPort = ports?.Where(p => p.Name == "minecraftrcon")?.SingleOrDefault();
+                    //var ports = await GetPortsAsync(client);
+                    //var minecraftPort = ports?.Where(p => p.Name == "minecraftport")?.SingleOrDefault();
+                    //var minecraftRconPort = ports?.Where(p => p.Name == "minecraftrcon")?.SingleOrDefault();
 
                     var containers = await GetContainersAsync(client);
 
@@ -76,7 +76,7 @@ namespace KubernetesMonitor
                 return new MineCraftInfo {
                     Online = minecraftStatus.Players.Online,
                     Max = minecraftStatus.Players.Max,
-                    Population = minecraftStatus.Players?.Sample?.Count ?? -1,
+                    Population = minecraftStatus.Players?.Sample?.Count ?? 0,
                     PodName = podName
                 };
                 //return $"players={minecraftStatus.Players.Online}, capacity={minecraftStatus.Players.Max}, population={minecraftStatus.Players?.Sample?.Count ?? 0}";

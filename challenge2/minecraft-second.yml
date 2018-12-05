@@ -14,7 +14,7 @@ spec:
    spec:
      containers:
      - name: azure-vote-front
-       image: openhack/minecraft-server:1.0
+       image: openhack/minecraft-server:2.0
        ports:
        - name: minecraftport 
          containerPort: 25565
