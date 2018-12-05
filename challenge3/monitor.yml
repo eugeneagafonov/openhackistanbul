@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: k8s-monitor
+spec:
+ selector:
+   matchLabels:
+     app: k8s-monitor
+ template:
+   metadata:
+     labels:
+       app: k8s-monitor
+   spec:
+     containers:
+     - name: k8s-monitor
+       image: ohteam2.azurecr.io/team2/k8s-monitor:1.8
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: k8s-monitor-rbac
+subjects:
+  - kind: ServiceAccount
+    # Reference to upper's `metadata.name`
+    name: default
+    # Reference to upper's `metadata.namespace`
+    namespace: default
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io

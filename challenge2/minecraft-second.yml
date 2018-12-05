@@ -23,6 +23,13 @@ spec:
        env:
        - name: EULA
          value: "TRUE"
+       volumeMounts:
+          - mountPath: /data
+            name: minecraft-volume
+     volumes:
+       - name: minecraft-volume
+         persistentVolumeClaim:
+           claimName: azurefile
 ---
 apiVersion: v1
 kind: Service
